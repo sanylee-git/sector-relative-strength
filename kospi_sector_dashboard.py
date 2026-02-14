@@ -456,12 +456,24 @@ SECTORS_US = {
 
 # 기간 옵션
 PERIOD_OPTIONS = {
+    "3일": 3,
     "5일": 5,
     "10일": 10,
     "20일": 20,
+    "40일": 40,
     "60일": 60,
-    "120일": 120,
+    "6개월": 126,
     "1년": 252,
+    "1년6개월": 378,
+    "2년": 504,
+    "3년": 756,
+    "4년": 1008,
+    "5년": 1260,
+    "6년": 1512,
+    "7년": 1764,
+    "8년": 2016,
+    "9년": 2268,
+    "10년": 2520,
 }
 
 # 벤치마크 지수 옵션
@@ -880,15 +892,14 @@ def main():
 
     # ========== 사이드바 설정 ==========
     with st.sidebar:
-        # 기간 선택
-        st.markdown("**📅 기간**")
-        period_name = st.radio(
-            "기간",
-            options=list(PERIOD_OPTIONS.keys()),
-            horizontal=True,
-            index=1,  # 기본값: 10일
-            label_visibility="collapsed"
-        )
+        # 기간 선택 (아코디언)
+        with st.expander("**📅 기간**", expanded=False):
+            period_name = st.radio(
+                "기간",
+                options=list(PERIOD_OPTIONS.keys()),
+                index=2,  # 기본값: 10일
+                label_visibility="collapsed"
+            )
         period_days = PERIOD_OPTIONS[period_name]
 
         st.divider()
@@ -1373,7 +1384,7 @@ def main():
 
     # ========== 데이터 수집 (배치 다운로드) ==========
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=period_days + 50)
+    start_date = end_date - timedelta(days=int(period_days * 3) + 100)
 
     with st.spinner("📡 데이터 로딩..."):
         # 1. 모든 티커 수집 (벤치마크 + 섹터 종목 + 커스텀 종목)
@@ -1764,11 +1775,20 @@ def main():
             ranking_data = []
             for col in relative_df.columns:
                 if col in filtered_data.columns:
-                    stock_return = (filtered_data[col].iloc[-1] / filtered_data[col].iloc[0] - 1) * 100
-                    rel_return = relative_df[col].iloc[-1] if len(relative_df[col]) > 0 else 0
-                    status = '🔥' if rel_return > 0 else '❄️'
+                    first_val = filtered_data[col].iloc[0]
+                    last_val = filtered_data[col].iloc[-1]
+                    rel_val = relative_df[col].iloc[-1] if len(relative_df[col]) > 0 else 0
+
+                    if pd.isna(first_val) or pd.isna(last_val) or first_val == 0 or pd.isna(rel_val):
+                        stock_return = None
+                        rel_return = None
+                        status = '⚠️'
+                    else:
+                        stock_return = round((last_val / first_val - 1) * 100, 1)
+                        rel_return = round(rel_val, 1)
+                        status = '🔥' if rel_return > 0 else '❄️'
+
                     stock_name = col.split(']')[-1] if ']' in col else col
-                    # 섹터 추출 (예: "[🔬반도체]삼성전자" → "🔬반도체")
                     if '[' in col and ']' in col:
                         sector = col.split('[')[1].split(']')[0]
                     else:
@@ -1776,15 +1796,15 @@ def main():
                     ranking_data.append({
                         '섹터': sector,
                         '종목': stock_name,
-                        '상대수익률': round(rel_return, 1),
-                        '수익률': round(stock_return, 1),
+                        '상대수익률': rel_return,
+                        '수익률': stock_return,
                         '상태': status,
                         '_full_name': col
                     })
             df = pd.DataFrame(ranking_data)
             if df.empty:
                 return df
-            df = df.sort_values('상대수익률', ascending=False)
+            df = df.sort_values('상대수익률', ascending=False, na_position='last')
             df['순위'] = range(1, len(df) + 1)
             return df
 
@@ -1797,15 +1817,48 @@ def main():
         else:
             ranking_prev = pd.DataFrame()
 
+        # ===== 이전 기간 부족 종목 보완 =====
+        if not ranking_now.empty:
+            prev_names = set(ranking_prev['_full_name']) if not ranking_prev.empty else set()
+            missing_rows = []
+            for _, row in ranking_now.iterrows():
+                if row['_full_name'] not in prev_names:
+                    missing_rows.append({
+                        '섹터': row['섹터'],
+                        '종목': row['종목'],
+                        '상대수익률': None,
+                        '수익률': None,
+                        '상태': '⚠️',
+                        '_full_name': row['_full_name'],
+                    })
+            if missing_rows:
+                missing_df = pd.DataFrame(missing_rows)
+                if not ranking_prev.empty:
+                    ranking_prev = pd.concat([ranking_prev, missing_df], ignore_index=True)
+                    ranking_prev = ranking_prev.sort_values('상대수익률', ascending=False, na_position='last')
+                else:
+                    ranking_prev = missing_df
+                ranking_prev['순위'] = range(1, len(ranking_prev) + 1)
+
+            if not ranking_prev.empty and not has_prev_data:
+                has_prev_data = True
+                if not prev_start:
+                    prev_start = '(부족)'
+                    prev_end = ''
+
         # ===== 순위 변동 계산 =====
         if not ranking_now.empty and not ranking_prev.empty:
+            prev_valid = set(ranking_prev[ranking_prev['상대수익률'].notna()]['_full_name']) if not ranking_prev.empty else set()
             prev_rank_map = dict(zip(ranking_prev['_full_name'], ranking_prev['순위']))
             rank_changes = []
             for _, row in ranking_now.iterrows():
                 full_name = row['_full_name']
+                if full_name not in prev_valid:
+                    rank_changes.append('⚠️')
+                    continue
                 curr_rank = row['순위']
                 prev_rank = prev_rank_map.get(full_name, curr_rank)
-                change = prev_rank - curr_rank  # 양수면 순위 상승
+                change = prev_rank - curr_rank
                 if change > 0:
                     rank_changes.append(f'▲{change}')
                 elif change < 0:
@@ -1826,18 +1879,20 @@ def main():
 
         # 최강/최약
         if not ranking_now.empty:
-            best = ranking_now.iloc[0]
-            worst = ranking_now.iloc[-1]
-            with c3:
-                st.metric("🥇 현재 최강", best['종목'], f"{best['상대수익률']:+.1f}%p")
-            with c4:
-                st.metric("💀 현재 최약", worst['종목'], f"{worst['상대수익률']:+.1f}%p")
+            valid_ranking = ranking_now[ranking_now['상대수익률'].notna()]
+            if not valid_ranking.empty:
+                best = valid_ranking.iloc[0]
+                worst = valid_ranking.iloc[-1]
+                with c3:
+                    st.metric("🥇 현재 최강", best['종목'], f"{best['상대수익률']:+.1f}%p")
+                with c4:
+                    st.metric("💀 현재 최약", worst['종목'], f"{worst['상대수익률']:+.1f}%p")
 
         st.markdown("")
 
         # ===== 스타일 함수 =====
         def color_relative(val):
-            if isinstance(val, (int, float)):
+            if isinstance(val, (int, float)) and pd.notna(val):
                 if val > 0:
                     return 'background-color: rgba(74,222,128,0.15); color: #4ade80'
                 elif val < 0:
@@ -1873,7 +1928,7 @@ def main():
                 ).format({
                     '상대수익률': '{:+.1f}%p',
                     '수익률': '{:+.1f}%',
-                })
+                }, na_rep='⚠️ 기간 부족')
                 st.dataframe(styled_prev, use_container_width=True, height=400)
 
             # 현재 기간 테이블 (오른쪽)
@@ -1885,28 +1940,29 @@ def main():
                     </p>
                 """, unsafe_allow_html=True)
 
-                display_now = ranking_now[['순위', '변동', '섹터', '종목', '상대수익률', '수익률', '상태']].copy()
+                now_cols = ['순위', '변동', '섹터', '종목', '상대수익률', '수익률', '상태'] if '변동' in ranking_now.columns else ['순위', '섹터', '종목', '상대수익률', '수익률', '상태']
+                display_now = ranking_now[now_cols].copy()
                 display_now.index = range(1, len(display_now) + 1)
 
-                styled_now = display_now.style.applymap(
+                styler = display_now.style.applymap(
                     color_relative, subset=['상대수익률']
-                ).applymap(
-                    color_change, subset=['변동']
-                ).format({
+                )
+                if '변동' in display_now.columns:
+                    styler = styler.applymap(color_change, subset=['변동'])
+                styler = styler.format({
                     '상대수익률': '{:+.1f}%p',
                     '수익률': '{:+.1f}%',
-                })
-                st.dataframe(styled_now, use_container_width=True, height=400)
+                }, na_rep='⚠️ 기간 부족')
+                st.dataframe(styler, use_container_width=True, height=400)
 
         else:
-            # 이전 데이터가 없으면 현재 테이블만 표시
+            # 이전 데이터도 보완할 수 없는 경우 현재만 표시
             st.markdown(f"""
                 <p style='text-align:center; color:#EDEDED; font-size:11px; font-weight:500;
                           text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;'>
                 현재 기간 · {current_start} ~ {current_end}
                 </p>
             """, unsafe_allow_html=True)
-            st.caption("⚠️ 이전 기간 데이터가 부족하여 비교할 수 없습니다.")
 
             if not ranking_now.empty:
                 display_now = ranking_now[['순위', '섹터', '종목', '상대수익률', '수익률', '상태']].copy()
@@ -1917,7 +1973,7 @@ def main():
                 ).format({
                     '상대수익률': '{:+.1f}%p',
                     '수익률': '{:+.1f}%',
-                })
+                }, na_rep='⚠️ 기간 부족')
                 st.dataframe(styled_now, use_container_width=True, height=420)
 
     # ========== 하단 가이드 ==========
