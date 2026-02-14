@@ -1359,29 +1359,6 @@ def main():
         </div>
     """, unsafe_allow_html=True)
 
-    # 현재 설정 요약 표시 (태그 스타일)
-    norm_label = "시작=100" if normalize_method == 'rebase100' else "수익률%"
-    st.markdown(f"""
-        <div style='display: flex; gap: 6px; margin: 0 0 16px 0; flex-wrap: wrap;'>
-            <span style='background: #161618; padding: 4px 10px; border-radius: 4px;
-                         font-size: 11px; color: #9B9B9B; border: 1px solid rgba(255,255,255,0.08);'>
-                📅 {period_name}
-            </span>
-            <span style='background: #161618; padding: 4px 10px; border-radius: 4px;
-                         font-size: 11px; color: #9B9B9B; border: 1px solid rgba(255,255,255,0.08);'>
-                📐 {norm_label}
-            </span>
-            <span style='background: #161618; padding: 4px 10px; border-radius: 4px;
-                         font-size: 11px; color: #9B9B9B; border: 1px solid rgba(255,255,255,0.08);'>
-                🏭 {len(selected_sectors)}개 섹터
-            </span>
-            <span style='background: #161618; padding: 4px 10px; border-radius: 4px;
-                         font-size: 11px; color: #9B9B9B; border: 1px solid rgba(255,255,255,0.08);'>
-                🏷️ {stock_type_filter}
-            </span>
-        </div>
-    """, unsafe_allow_html=True)
-
     # ========== 데이터 수집 (배치 다운로드) ==========
     end_date = datetime.now()
     start_date = end_date - timedelta(days=int(period_days * 3) + 100)
@@ -1428,6 +1405,31 @@ def main():
     if all_data.empty or len(all_data) < 2:
         st.warning("⚠️ 데이터가 부족합니다.")
         return
+
+    # 현재 설정 요약 표시 (태그 스타일) - 실제 데이터 날짜 사용
+    norm_label = "시작=100" if normalize_method == 'rebase100' else "수익률%"
+    data_start = all_data.index[0].strftime('%Y-%m-%d')
+    data_end = all_data.index[-1].strftime('%Y-%m-%d')
+    st.markdown(f"""
+        <div style='display: flex; gap: 6px; margin: 0 0 16px 0; flex-wrap: wrap;'>
+            <span style='background: #161618; padding: 4px 10px; border-radius: 4px;
+                         font-size: 11px; color: #9B9B9B; border: 1px solid rgba(255,255,255,0.08);'>
+                📅 {period_name} · {data_start} ~ {data_end}
+            </span>
+            <span style='background: #161618; padding: 4px 10px; border-radius: 4px;
+                         font-size: 11px; color: #9B9B9B; border: 1px solid rgba(255,255,255,0.08);'>
+                📐 {norm_label}
+            </span>
+            <span style='background: #161618; padding: 4px 10px; border-radius: 4px;
+                         font-size: 11px; color: #9B9B9B; border: 1px solid rgba(255,255,255,0.08);'>
+                🏭 {len(selected_sectors)}개 섹터
+            </span>
+            <span style='background: #161618; padding: 4px 10px; border-radius: 4px;
+                         font-size: 11px; color: #9B9B9B; border: 1px solid rgba(255,255,255,0.08);'>
+                🏷️ {stock_type_filter}
+            </span>
+        </div>
+    """, unsafe_allow_html=True)
 
     # ========== 상대강도 미리 계산 (주도/소외 분류용) ==========
     relative_df_all = calculate_relative_strength(all_data, benchmark_col=bench_name)
@@ -1759,12 +1761,12 @@ def main():
             has_prev_data = False
 
         # ===== 기간 날짜 표시 =====
-        current_start = filtered_data_now.index[0].strftime('%m/%d') if len(filtered_data_now) > 0 else ''
-        current_end = filtered_data_now.index[-1].strftime('%m/%d') if len(filtered_data_now) > 0 else ''
+        current_start = filtered_data_now.index[0].strftime('%Y-%m-%d') if len(filtered_data_now) > 0 else ''
+        current_end = filtered_data_now.index[-1].strftime('%Y-%m-%d') if len(filtered_data_now) > 0 else ''
 
         if has_prev_data and len(filtered_data_prev) > 0:
-            prev_start = filtered_data_prev.index[0].strftime('%m/%d')
-            prev_end = filtered_data_prev.index[-1].strftime('%m/%d')
+            prev_start = filtered_data_prev.index[0].strftime('%Y-%m-%d')
+            prev_end = filtered_data_prev.index[-1].strftime('%Y-%m-%d')
         else:
             prev_start, prev_end = '', ''
 
