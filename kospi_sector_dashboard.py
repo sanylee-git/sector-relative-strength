@@ -25,6 +25,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Google AdSense
+st.markdown("""
+    <meta name="google-adsense-account" content="ca-pub-9688338422874533">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9688338422874533"
+         crossorigin="anonymous"></script>
+""", unsafe_allow_html=True)
+
 # ========================================================================================
 # 한국 섹터 및 대표종목 정의 (이모지 포함)
 # 첫 번째 종목이 대표종목 (기본 선택됨)
