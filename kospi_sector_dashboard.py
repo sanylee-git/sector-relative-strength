@@ -1367,8 +1367,9 @@ def main():
     """, unsafe_allow_html=True)
 
     # ========== 데이터 수집 (배치 다운로드) ==========
-    end_date = datetime.now() + timedelta(days=1)  # yfinance end는 exclusive라 +1일 필요
-    start_date = end_date - timedelta(days=int(period_days * 3) + 101)
+    today = datetime.now().date()
+    end_date = today + timedelta(days=1)    # yfinance end는 exclusive라 +1일
+    start_date = today - timedelta(days=int(period_days * 3) + 100)
 
     with st.spinner("📡 데이터 로딩..."):
         # 1. 모든 티커 수집 (벤치마크 + 섹터 종목 + 커스텀 종목)
@@ -1394,7 +1395,8 @@ def main():
 
         # 2. 배치 다운로드 (한 번의 API 호출)
         all_tickers = tuple(sorted(ticker_info.keys()))  # 캐시 키용 tuple
-        batch_data = get_batch_stock_data(all_tickers, start_date, end_date)
+        # 캐시 키: 날짜 문자열로 변환 (datetime 객체는 초 단위로 변해서 캐시 무효화됨)
+        batch_data = get_batch_stock_data(all_tickers, str(start_date), str(end_date))
 
         if batch_data.empty or benchmark_info['ticker'] not in batch_data.columns:
             st.error(f"❌ {bench_name} 데이터를 가져올 수 없습니다.")
