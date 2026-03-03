@@ -1367,8 +1367,8 @@ def main():
     """, unsafe_allow_html=True)
 
     # ========== 데이터 수집 (배치 다운로드) ==========
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=int(period_days * 3) + 100)
+    end_date = datetime.now() + timedelta(days=1)  # yfinance end는 exclusive라 +1일 필요
+    start_date = end_date - timedelta(days=int(period_days * 3) + 101)
 
     with st.spinner("📡 데이터 로딩..."):
         # 1. 모든 티커 수집 (벤치마크 + 섹터 종목 + 커스텀 종목)
