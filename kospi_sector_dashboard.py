@@ -580,40 +580,56 @@ FONT_SIZE = 14
 # ========================================================================================
 # 데이터 수집 함수
 # ========================================================================================
-@st.cache_data(ttl=3600)
+def _parse_yf_to_close(data, tickers):
+    """yfinance 다운로드 결과에서 종가만 추출해 ticker별 DataFrame 반환"""
+    if data.empty:
+        return pd.DataFrame()
+    if len(tickers) == 1:
+        if isinstance(data.columns, pd.MultiIndex):
+            data.columns = data.columns.get_level_values(0)
+        df = data[['Close']].copy()
+        df.columns = [tickers[0]]
+        df.index = pd.to_datetime(df.index).tz_localize(None)
+        return df
+    result = pd.DataFrame()
+    for ticker in tickers:
+        try:
+            if ticker in data.columns.get_level_values(0):
+                result[ticker] = data[ticker]['Close']
+        except:
+            pass
+    if not result.empty:
+        result.index = pd.to_datetime(result.index).tz_localize(None)
+    return result
+
+
+@st.cache_data(ttl=900)  # 15분마다 갱신 (오늘 데이터 빠른 반영)
 def get_batch_stock_data(tickers_tuple, start_date, end_date):
     """yfinance로 여러 주식/지수 데이터 한 번에 가져오기 (배치 다운로드)"""
-    tickers = list(tickers_tuple)  # tuple을 list로 변환 (캐시 키용)
+    tickers = list(tickers_tuple)
     if not tickers:
         return pd.DataFrame()
     try:
-        data = yf.download(tickers, start=start_date, end=end_date, progress=False, group_by='ticker', threads=True)
-        if data.empty:
-            return pd.DataFrame()
+        # 1) 과거 데이터 (start ~ end)
+        raw = yf.download(tickers, start=start_date, end=end_date,
+                          progress=False, group_by='ticker', threads=True)
+        result = _parse_yf_to_close(raw, tickers)
 
-        # 단일 티커인 경우
-        if len(tickers) == 1:
-            if isinstance(data.columns, pd.MultiIndex):
-                data.columns = data.columns.get_level_values(0)
-            df = data[['Close']].copy()
-            df.columns = [tickers[0]]
-            df.index = pd.to_datetime(df.index).tz_localize(None)
-            return df
+        # 2) 최근 5거래일 데이터 보완 → 오늘 당일 종가 확보
+        try:
+            recent_raw = yf.download(tickers, period='5d', interval='1d',
+                                     progress=False, group_by='ticker', threads=True)
+            recent = _parse_yf_to_close(recent_raw, tickers)
+            if not recent.empty:
+                # 과거 데이터에 없는 날짜만 추가 (중복 방지)
+                new_rows = recent[~recent.index.isin(result.index)]
+                if not new_rows.empty:
+                    result = pd.concat([result, new_rows]).sort_index()
+        except:
+            pass
 
-        # 여러 티커인 경우: Close 가격만 추출
-        result = pd.DataFrame()
-        for ticker in tickers:
-            try:
-                if ticker in data.columns.get_level_values(0):
-                    close_data = data[ticker]['Close']
-                    result[ticker] = close_data
-            except:
-                pass
-
-        if not result.empty:
-            result.index = pd.to_datetime(result.index).tz_localize(None)
         return result
-    except Exception as e:
+    except Exception:
         return pd.DataFrame()
 
 
