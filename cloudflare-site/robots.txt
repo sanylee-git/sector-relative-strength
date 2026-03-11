@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Google AdSense 크롤러 허용
+User-agent: Mediapartners-Google
+Allow: /
+
+# 사이트맵
+Sitemap: https://sectorrs.pages.dev/sitemap.xml

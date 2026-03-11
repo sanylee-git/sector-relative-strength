@@ -1,28 +1,565 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>지수 vs 섹터/종목 상대강도</title>
-    <meta name="google-adsense-account" content="ca-pub-9688338422874533">
-    <meta name="description" content="코스피/나스닥 대비 섹터별 종목 상대강도 대시보드. ETF 및 개별종목 비교 분석.">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9688338422874533"
-         crossorigin="anonymous"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; overflow: hidden; background: #0D0D0E; }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ══ SEO: Title & Meta Description ══ -->
+  <title>섹터RS - KOSPI·KOSDAQ 섹터 상대강도 분석 대시보드 | 무료 주식 분석</title>
+  <meta name="description" content="KOSPI·KOSDAQ 전 섹터의 실시간 상대강도(RS) 차트를 한눈에. 시장 주도 섹터를 빠르게 파악하고 투자 전략을 수립하세요. 완전 무료, 회원가입 불필요.">
+  <meta name="keywords" content="섹터 상대강도, RS 분석, KOSPI 섹터, KOSDAQ 섹터, 주식 섹터 분석, 시장 주도 섹터, 섹터 순환매매, 주식 대시보드, 상대강도 차트">
+  <meta name="author" content="섹터RS">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://sectorrs.pages.dev/">
+
+  <!-- ══ Open Graph ══ -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="섹터RS - KOSPI·KOSDAQ 섹터 상대강도 분석 대시보드">
+  <meta property="og:description" content="국내외 주식 전 섹터의 실시간 상대강도(RS) 차트. 시장 주도 섹터를 빠르게 파악하세요.">
+  <meta property="og:url" content="https://sectorrs.pages.dev/">
+  <meta property="og:site_name" content="섹터RS">
+  <meta property="og:locale" content="ko_KR">
+
+  <!-- ══ Twitter Card ══ -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="섹터RS - KOSPI·KOSDAQ 섹터 상대강도 분석">
+  <meta name="twitter:description" content="국내외 주식 전 섹터의 실시간 상대강도(RS) 차트를 한눈에 확인하세요.">
+
+  <!-- ══ AdSense ══ -->
+  <meta name="google-adsense-account" content="ca-pub-9688338422874533">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9688338422874533"
+     crossorigin="anonymous"></script>
+
+  <!-- ══ JSON-LD: WebApplication ══ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "섹터RS",
+    "url": "https://sectorrs.pages.dev/",
+    "description": "KOSPI·KOSDAQ 전 섹터의 실시간 상대강도(RS) 차트를 제공하는 무료 주식 분석 대시보드",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "KRW"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "섹터RS 운영팀"
+    },
+    "dateModified": "2026-03-11",
+    "inLanguage": "ko",
+    "featureList": [
+      "KOSPI 전 섹터 상대강도 차트",
+      "KOSDAQ 전 섹터 상대강도 차트",
+      "개별 종목 RS 분석",
+      "나스닥·S&P500 비교",
+      "다중 섹터 동시 비교"
+    ]
+  }
+  </script>
+
+  <!-- ══ JSON-LD: FAQPage ══ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "섹터 상대강도(RS)란 무엇인가요?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "섹터 상대강도(Relative Strength)는 특정 섹터가 시장 전체(코스피 또는 코스닥) 대비 얼마나 강하게 움직이는지 수치화한 지표입니다. RS 값이 1보다 높으면 시장 대비 강세, 낮으면 약세를 의미하며 기관·외국인 자금이 집중되는 섹터를 조기에 파악하는 데 활용됩니다."
         }
-    </style>
+      },
+      {
+        "@type": "Question",
+        "name": "섹터RS는 어떤 데이터를 사용하나요?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yahoo Finance 공개 API를 통해 KOSPI, KOSDAQ, 나스닥, S&P500 등 주요 지수와 국내 대표 섹터별 종목 데이터를 수집합니다. 영업일 기준 최근 거래 데이터가 반영됩니다."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "섹터RS는 무료로 이용할 수 있나요?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "네, 완전 무료입니다. 회원가입, 이메일 입력 등 어떠한 절차도 없으며 웹 브라우저만 있으면 즉시 이용 가능합니다."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "데이터는 얼마나 자주 업데이트되나요?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "대시보드 로딩 시 최신 데이터를 불러오며, 새로고침 버튼으로 언제든 갱신할 수 있습니다. 주식 시장 운영 시간 중에는 당일 데이터가 반영됩니다."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "모바일에서도 사용할 수 있나요?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "네, 모바일 브라우저에서도 이용 가능합니다. 다수의 섹터 차트를 동시에 비교할 때는 PC 화면이 더 편리합니다."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- ══ JSON-LD: BreadcrumbList ══ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "홈",
+        "item": "https://sectorrs.pages.dev/"
+      }
+    ]
+  }
+  </script>
+
+  <!-- ══ 기존 스타일 (변경 없음) ══ -->
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0D0D0E; color: #EDEDED; font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif; }
+    .wrapper { display: flex; flex-direction: column; height: 100vh; }
+    header { padding: 12px 20px; background: #111113; border-bottom: 1px solid #2A2A2E; display: flex; align-items: center; gap: 10px; }
+    header h1 { font-size: 1rem; font-weight: 700; color: #EDEDED; }
+    header span { color: #787EE7; }
+    iframe { flex: 1; border: none; width: 100%; }
+
+    /* ══ 신규 요소 전용 스타일 (기존 코드 하단에 추가) ══ */
+
+    .scroll-hint {
+      font-size: 0.72rem;
+      color: #555;
+      margin-left: auto;
+      letter-spacing: 0.02em;
+    }
+    .scroll-hint a {
+      color: #787EE7;
+      text-decoration: none;
+    }
+
+    .content-sections {
+      background: #0D0D0E;
+      padding: 48px 24px;
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section-block {
+      margin-bottom: 52px;
+    }
+    .section-block h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #EDEDED;
+      border-left: 3px solid #787EE7;
+      padding-left: 12px;
+      margin-bottom: 18px;
+    }
+    .section-block p {
+      font-size: 0.93rem;
+      color: #B0B0B0;
+      line-height: 1.8;
+      margin-bottom: 14px;
+    }
+    .section-block p strong {
+      color: #EDEDED;
+    }
+    .section-block p em {
+      color: #787EE7;
+      font-style: normal;
+    }
+
+    .key-takeaways-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .key-takeaways-list li {
+      background: #111113;
+      border: 1px solid #2A2A2E;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      color: #EDEDED;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.65;
+    }
+    .key-takeaways-list li::before {
+      content: "✦";
+      color: #787EE7;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .key-takeaways-list li strong {
+      color: #B8B8FF;
+    }
+
+    .steps-list {
+      counter-reset: step-counter;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .steps-list li {
+      counter-increment: step-counter;
+      background: #111113;
+      border: 1px solid #2A2A2E;
+      border-radius: 8px;
+      padding: 13px 16px 13px 52px;
+      font-size: 0.88rem;
+      color: #EDEDED;
+      position: relative;
+      line-height: 1.65;
+    }
+    .steps-list li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 24px;
+      background: #787EE7;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .steps-list li strong {
+      color: #B8B8FF;
+    }
+
+    .faq-item {
+      border: 1px solid #2A2A2E;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .faq-q {
+      background: #111113;
+      padding: 14px 16px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: #EDEDED;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .faq-q::after {
+      content: "＋";
+      color: #787EE7;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .faq-a {
+      padding: 14px 16px;
+      font-size: 0.86rem;
+      color: #B0B0B0;
+      line-height: 1.75;
+      background: #0D0D0E;
+      border-top: 1px solid #2A2A2E;
+    }
+
+    .author-bio {
+      background: #111113;
+      border: 1px solid #2A2A2E;
+      border-radius: 10px;
+      padding: 20px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .author-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #1E1E30;
+      border: 1px solid #787EE7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .author-info h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #EDEDED;
+      margin-bottom: 4px;
+    }
+    .author-meta {
+      font-size: 0.76rem;
+      color: #787EE7;
+      margin-bottom: 10px;
+    }
+    .author-info p {
+      font-size: 0.84rem;
+      color: #B0B0B0;
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+    .last-updated {
+      font-size: 0.74rem;
+      color: #555;
+      margin-top: 10px;
+    }
+
+    .ad-slot-mid {
+      background: #111113;
+      border: 1px solid #2A2A2E;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      margin: 36px 0;
+      min-height: 100px;
+    }
+
+    .disclaimer {
+      font-size: 0.78rem;
+      color: #555;
+      background: #111113;
+      border: 1px solid #2A2A2E;
+      border-radius: 6px;
+      padding: 12px 16px;
+      line-height: 1.7;
+      margin-top: 8px;
+    }
+
+    .site-footer {
+      background: #111113;
+      border-top: 1px solid #2A2A2E;
+      text-align: center;
+      padding: 28px 20px;
+      font-size: 0.76rem;
+      color: #555;
+      line-height: 1.9;
+    }
+    .site-footer a {
+      color: #787EE7;
+      text-decoration: none;
+    }
+    .site-footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .author-bio { flex-direction: column; }
+      .scroll-hint { display: none; }
+    }
+  </style>
 </head>
 <body>
-    <iframe src="https://stock-market-rs.streamlit.app/?embed=true"
-            allow="clipboard-read; clipboard-write"
-            loading="eager">
-    </iframe>
+
+  <!-- ① 기존 구조 (내부 변경 없음) -->
+  <div class="wrapper">
+    <header>
+      <h1>📈 섹터RS<span>.</span></h1>
+      <span class="scroll-hint">↓ <a href="#content">서비스 소개 보기</a></span>
+    </header>
+    <iframe
+      src="https://stock-market-rs.streamlit.app/?embed=true"
+      allow="fullscreen"
+      title="섹터RS 대시보드 - KOSPI KOSDAQ 섹터 상대강도 차트"
+      loading="lazy"
+    ></iframe>
+  </div>
+
+  <!-- ② SEO / GEO / E-E-A-T / AdSense 콘텐츠 (신규 추가) -->
+  <main id="content" class="content-sections">
+
+    <!-- GEO 최적화: AI가 요약하기 좋은 Key Takeaways -->
+    <section class="section-block" aria-labelledby="takeaways-heading">
+      <h2 id="takeaways-heading">⚡ 핵심 요약 (Key Takeaways)</h2>
+      <ul class="key-takeaways-list">
+        <li><strong>섹터 상대강도(RS)</strong>는 특정 섹터가 코스피·코스닥 대비 얼마나 강하게 움직이는지 수치화한 핵심 지표입니다.</li>
+        <li>RS 라인이 <strong>상승 중인 섹터</strong>는 기관·외국인 자금이 집중되는 시장 주도 섹터일 가능성이 높습니다.</li>
+        <li>섹터RS에서 KOSPI·KOSDAQ <strong>전 섹터를 실시간으로 비교</strong>하고 주도 섹터를 조기에 발굴할 수 있습니다.</li>
+        <li>개별 종목의 RS도 확인할 수 있어 <strong>종목 발굴과 매수 타이밍 포착</strong>에 활용 가능합니다.</li>
+        <li><strong>완전 무료 · 회원가입 불필요</strong> · 웹 브라우저만 있으면 즉시 이용 가능합니다.</li>
+      </ul>
+    </section>
+
+    <!-- AdSense: 본문 상단 광고 슬롯 -->
+    <!-- ★ AdSense 콘솔에서 발급한 실제 data-ad-slot 값으로 교체하세요 ★ -->
+    <div class="ad-slot-mid" aria-label="광고">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-9688338422874533"
+           data-ad-slot="AUTO"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <!-- 서비스 소개 (E-E-A-T: 전문성) -->
+    <section class="section-block" aria-labelledby="intro-heading">
+      <h2 id="intro-heading">섹터RS란?</h2>
+      <p>
+        <strong>섹터RS</strong>는 국내 주식 투자자를 위한 무료 섹터 상대강도 분석 대시보드입니다.
+        매일 수백만 건의 데이터를 직접 파헤치지 않아도, 한눈에 <em>지금 시장의 돈이 어느 섹터로 흐르는지</em> 파악할 수 있도록 설계되었습니다.
+      </p>
+      <p>
+        주식 시장에서 꾸준히 수익을 내는 투자자들은 개별 종목을 고르기 전에 반드시
+        <em>시장 전체 흐름 → 강한 섹터 → 섹터 내 강한 종목</em> 순으로 필터링합니다.
+        이를 <strong>탑다운(Top-Down) 접근법</strong>이라 부르며, 섹터 상대강도는 그 핵심 도구입니다.
+      </p>
+      <p>
+        윌리엄 오닐(William O'Neil)의 CAN SLIM 방법론과 마크 미너비니(Mark Minervini)의 Trend Template에서도
+        섹터 강도 분석은 핵심 스크리닝 조건입니다. 섹터RS는 이 개념을 국내 시장에 맞게 구현하여
+        누구나 쉽게 활용할 수 있도록 만들었습니다.
+      </p>
+    </section>
+
+    <!-- 사용 방법 (E-E-A-T: 경험) -->
+    <section class="section-block" aria-labelledby="howto-heading">
+      <h2 id="howto-heading">이렇게 활용하세요</h2>
+      <ol class="steps-list">
+        <li><strong>기준 지수 선택:</strong> 코스피 또는 코스닥 중 분석할 시장을 선택합니다. 코스피는 대형주 중심, 코스닥은 중소형·성장주 중심입니다.</li>
+        <li><strong>기간 설정:</strong> 1개월·3개월·6개월·1년 중 원하는 분석 기간을 설정합니다. 단기 모멘텀 확인은 1~3개월, 추세 확인은 6개월~1년을 권장합니다.</li>
+        <li><strong>RS 차트 비교:</strong> RS 라인이 우상향하는 섹터가 시장 주도 섹터입니다. 반대로 RS가 지속 하락하는 섹터는 자금이 이탈 중임을 나타냅니다.</li>
+        <li><strong>종목 드릴다운:</strong> 관심 섹터를 선택하면 해당 섹터 내 대표 종목별 RS를 상세 확인할 수 있습니다.</li>
+        <li><strong>다중 비교:</strong> 여러 섹터를 동시에 선택해 상대적 강도를 한 화면에서 비교하세요. 강한 섹터와 약한 섹터의 대비를 통해 매수·매도 판단을 강화할 수 있습니다.</li>
+      </ol>
+    </section>
+
+    <!-- 심화 이론 (전문성 / 분량 강화) -->
+    <section class="section-block" aria-labelledby="theory-heading">
+      <h2 id="theory-heading">섹터 상대강도(RS) 완전 이해하기</h2>
+      <p>
+        <strong>상대강도(Relative Strength, RS)</strong>는 특정 자산의 가격 변화율을 기준 지수의 가격 변화율로 나눈 비율입니다.
+        예를 들어 코스피가 5% 상승하는 동안 반도체 섹터가 8% 올랐다면,
+        반도체 RS = 8% ÷ 5% = 1.60이 됩니다. RS가 1보다 크면 시장 대비 강세, 1보다 작으면 약세입니다.
+      </p>
+      <p>
+        투자자들이 RS를 중요하게 보는 이유는 <strong>섹터 순환 매매(Sector Rotation)</strong> 현상 때문입니다.
+        경기 사이클에 따라 기관·외국인 자금은 특정 섹터로 집중되고 빠져나가는 패턴을 반복합니다.
+        금리 상승기엔 금융·에너지, 경기 회복기엔 소재·산업재, 성장 가속기엔 IT·헬스케어가 강세를 보이는 것이 전형적인 예시입니다.
+        RS 차트는 이 자금 흐름을 <em>주가 절대 레벨과 무관하게</em> 순수하게 포착합니다.
+      </p>
+      <p>RS 라인의 상태별 해석 방법은 다음과 같습니다:</p>
+      <ul class="key-takeaways-list" style="margin-top: 8px;">
+        <li><strong>RS 라인이 52주 신고가 갱신 중</strong> → 가장 강한 매수 신호. 기관·외국인의 적극적 매집이 진행 중일 가능성 높음.</li>
+        <li><strong>RS 라인이 장기 하락 후 반전 상승</strong> → 섹터 전환(Rotation) 초기 단계. 선제적 진입 기회.</li>
+        <li><strong>RS 라인이 박스권 횡보</strong> → 중립. 다른 강한 섹터와 비교 후 판단 필요.</li>
+        <li><strong>RS 라인이 지속 하락</strong> → 자금 이탈 구간. 해당 섹터 신규 매수 회피 권장.</li>
+      </ul>
+    </section>
+
+    <!-- AdSense: 본문 중간 광고 슬롯 -->
+    <!-- ★ AdSense 콘솔에서 발급한 실제 data-ad-slot 값으로 교체하세요 ★ -->
+    <div class="ad-slot-mid" aria-label="광고">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-9688338422874533"
+           data-ad-slot="AUTO"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <!-- FAQ (JSON-LD와 연동) -->
+    <section class="section-block" aria-labelledby="faq-heading">
+      <h2 id="faq-heading">자주 묻는 질문 (FAQ)</h2>
+
+      <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <div class="faq-q" itemprop="name">섹터 상대강도(RS)란 무엇인가요?</div>
+        <div class="faq-a" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+          <span itemprop="text">섹터 상대강도(Relative Strength)는 특정 섹터가 시장 전체(코스피 또는 코스닥) 대비 얼마나 강하게 움직이는지 수치화한 지표입니다. RS 값이 1보다 높으면 시장 대비 강세, 낮으면 약세를 의미하며 기관·외국인 자금이 집중되는 섹터를 조기에 파악하는 데 활용됩니다.</span>
+        </div>
+      </div>
+
+      <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <div class="faq-q" itemprop="name">섹터RS는 어떤 데이터를 사용하나요?</div>
+        <div class="faq-a" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+          <span itemprop="text">Yahoo Finance 공개 API를 통해 KOSPI, KOSDAQ, 나스닥, S&amp;P500 등 주요 지수와 국내 대표 섹터별 종목 데이터를 수집합니다. 영업일 기준 최근 거래 데이터가 반영됩니다.</span>
+        </div>
+      </div>
+
+      <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <div class="faq-q" itemprop="name">무료로 이용할 수 있나요?</div>
+        <div class="faq-a" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+          <span itemprop="text">네, 완전 무료입니다. 회원가입, 이메일 입력 등 어떠한 절차도 없으며 웹 브라우저만 있으면 즉시 이용 가능합니다.</span>
+        </div>
+      </div>
+
+      <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <div class="faq-q" itemprop="name">데이터는 얼마나 자주 업데이트되나요?</div>
+        <div class="faq-a" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+          <span itemprop="text">대시보드 로딩 시 최신 데이터를 불러오며, 새로고침 버튼으로 언제든 갱신할 수 있습니다. 주식 시장 운영 시간 중에는 당일 데이터가 반영됩니다.</span>
+        </div>
+      </div>
+
+      <div class="faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+        <div class="faq-q" itemprop="name">모바일에서도 사용할 수 있나요?</div>
+        <div class="faq-a" itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
+          <span itemprop="text">네, 모바일 브라우저에서도 이용 가능합니다. 다만 다수의 섹터 차트를 동시에 비교할 때는 PC 화면이 더 편리합니다.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 투자 유의사항 -->
+    <section class="section-block" aria-labelledby="disclaimer-heading">
+      <h2 id="disclaimer-heading">투자 유의사항</h2>
+      <div class="disclaimer">
+        본 서비스는 공개된 시장 데이터를 시각화하여 제공하는 참고용 정보 서비스입니다.
+        제공되는 차트와 수치는 투자 권유나 매매 신호가 아니며, 과거의 상대강도가 미래 수익을 보장하지 않습니다.
+        주식 투자에는 원금 손실 위험이 있으며, 최종 투자 판단과 책임은 본인에게 있습니다.
+      </div>
+    </section>
+
+    <!-- E-E-A-T: 저자 소개 & 최종 수정일 -->
+    <section class="section-block" aria-labelledby="author-heading">
+      <h2 id="author-heading">만든 사람</h2>
+      <div class="author-bio">
+        <div class="author-avatar" aria-hidden="true">📈</div>
+        <div class="author-info">
+          <h3>섹터RS 운영팀</h3>
+          <div class="author-meta">주식 분석 도구 개발 · 데이터 기반 투자 연구</div>
+          <p>
+            국내 주식 투자자들이 섹터 순환 매매를 더 쉽게 이해하고 활용할 수 있도록 섹터RS를 만들었습니다.
+            Python과 오픈 데이터를 활용한 퀀트 분석에 관심이 많으며, 복잡한 시장 데이터를 누구나 직관적으로 볼 수 있도록 시각화하는 것을 목표로 합니다.
+          </p>
+          <div class="last-updated">
+            <time datetime="2026-03-11">최종 업데이트: 2026년 3월 11일</time>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="site-footer">
+    <p>© 2026 섹터RS · 국내외 주식 섹터 상대강도 분석 대시보드</p>
+    <p>본 서비스는 투자 참고용이며 투자 권유가 아닙니다. 주식 투자에는 원금 손실 위험이 있습니다.</p>
+    <p style="margin-top: 6px;">
+      <a href="/sitemap.xml">사이트맵</a> ·
+      <a href="/robots.txt">Robots.txt</a> ·
+      <a href="https://stock-market-rs.streamlit.app" target="_blank" rel="noopener">대시보드 바로가기</a>
+    </p>
+  </footer>
+
 </body>
 </html>
